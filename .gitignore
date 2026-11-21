@@ -1,0 +1,12 @@
+# Runtime data: accounts, history and certificates stay on your machine.
+portal/data/
+portal/downloads/
+portal/.deps/
+*.pem
+*.key
+*.p12
+*.jks
+*password*.txt
+__pycache__/
+android/build/
+windows/*.zip

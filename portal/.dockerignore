@@ -1,0 +1,10 @@
+# Never bake accounts, certificates or local runtimes into the image.
+data/
+**/__pycache__/
+*.pem
+*.key
+*.sqlite3*
+Start-Portal.ps1
+.gitignore
+Dockerfile
+.dockerignore

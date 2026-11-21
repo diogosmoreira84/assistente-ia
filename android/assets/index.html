@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: file:; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+<title>Assistente IA</title>
+<!-- Assistente IA by Diogo Moreira. MIT License. ES5 and flexbox only, so it also runs on Android 4.4 WebView. -->
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#0f1014;color:#eceef2;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit;color:inherit}
+h1,h2,h3,p{margin:0}
+.hidden{display:none!important}
+.muted{color:#8a909c}.small{font-size:12.5px}
+.mono,code{font-family:"Roboto Mono",Consolas,monospace;font-size:12.5px}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;-webkit-flex:none;flex:none}
+
+/* Top bar and tab bar */
+.top{position:fixed;top:0;left:0;right:0;z-index:20;height:58px;display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;gap:10px;padding:0 16px;background:rgba(15,16,20,.94);border-bottom:1px solid rgba(255,255,255,.08)}
+.brand{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;font-weight:700;font-size:17px;letter-spacing:-.01em;-webkit-flex:1;flex:1;min-width:0}
+.brand svg{width:30px;height:30px;margin-right:10px;-webkit-flex:none;flex:none}
+.brand b{color:#c58ab0}
+.pill{display:inline-block;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:650;background:#252830;color:#b4b9c3;white-space:nowrap}
+.pill i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#8a909c;margin-right:6px;vertical-align:1px}
+.pill.on i{background:#3fb950}
+.pill.good{background:rgba(63,185,80,.14);color:#3fb950}.pill.bad{background:rgba(240,96,93,.14);color:#f0605d}
+.pill.warn{background:rgba(250,178,25,.14);color:#fab219}.pill.accent{background:rgba(143,168,255,.14);color:#8fa8ff}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:-webkit-flex;display:flex;background:rgba(22,23,29,.97);border-top:1px solid rgba(255,255,255,.08);padding-bottom:env(safe-area-inset-bottom)}
+.tabs button{-webkit-flex:1;flex:1;border:0;background:none;color:#8a909c;padding:8px 0 9px;font-size:11.5px;font-weight:600;position:relative}
+.tabs button svg{display:block;margin:0 auto 2px;width:22px;height:22px}
+.tabs button.on{color:#8fa8ff}
+.badge{position:absolute;top:4px;left:50%;margin-left:6px;min-width:18px;height:18px;line-height:18px;padding:0 5px;border-radius:9px;background:#fab219;color:#1a1300;font-size:11px;font-weight:700}
+main{padding:72px 14px 86px;max-width:1180px;margin:0 auto}
+
+/* Cards and layout */
+.card{background:#16171d;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px;margin-bottom:14px}
+.card-head{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;margin-bottom:12px}
+.card-head h2{font-size:15.5px;font-weight:650}
+.card-head p{font-size:12.5px;color:#8a909c;margin-top:1px}
+.cols{display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;margin:0 -7px}
+.col{padding:0 7px;width:100%}
+@media (min-width:900px){.col.main{width:62%}.col.side{width:38%}}
+.empty{text-align:center;color:#8a909c;padding:22px 10px}
+.empty strong{display:block;color:#eceef2;margin-bottom:4px}
+
+/* Buttons and inputs */
+.btn{display:inline-block;border:1px solid rgba(255,255,255,.14);background:#1d1f26;color:#eceef2;border-radius:10px;padding:10px 14px;font-weight:650;font-size:14px;text-align:center}
+.btn:active{background:#252830}
+.btn.primary{background:#8fa8ff;color:#0f1430;border-color:transparent}
+.btn.good{background:#2f9e44;color:#fff;border-color:transparent}
+.btn.bad{color:#f0605d}
+.btn.ghost{background:transparent;border-color:transparent;color:#b4b9c3}
+.btn.block{display:block;width:100%;margin-top:10px}
+.btn.sm{padding:7px 11px;font-size:13px}
+.btn:disabled{opacity:.5}
+textarea{width:100%;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:#1d1f26;padding:10px;resize:vertical}
+.row{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.row:last-child{border-bottom:0}
+.row .t{padding-right:12px;min-width:0}.row .t strong{display:block}.row .t small{display:block;color:#8a909c;font-size:12.5px}
+.switch{position:relative;width:44px;height:26px;-webkit-flex:none;flex:none}
+.switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;z-index:1}
+.switch span{position:absolute;top:0;left:0;right:0;bottom:0;border-radius:13px;background:#252830;border:1px solid rgba(255,255,255,.14)}
+.switch span:after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#8a909c;-webkit-transition:.15s;transition:.15s}
+.switch input:checked+span{background:#8fa8ff;border-color:transparent}
+.switch input:checked+span:after{-webkit-transform:translateX(18px);transform:translateX(18px);background:#0f1430}
+
+/* Approvals */
+.approval{background:#16171d;border:1px solid rgba(250,178,25,.5);border-radius:14px;padding:14px;margin-bottom:12px}
+.approval-meta{display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;-webkit-align-items:center;align-items:center;font-size:13.5px;color:#b4b9c3}
+.approval-meta>*{margin:0 8px 6px 0}
+.code{background:#1d1f26;border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:9px 11px;white-space:pre-wrap;word-break:break-word;max-height:150px;overflow:auto;margin:4px 0 12px}
+.actions{display:-webkit-flex;display:flex}
+.actions .btn{-webkit-flex:1;flex:1;margin-right:8px}.actions .btn:last-child{margin-right:0}
+.agent{display:inline-block;font-weight:650;color:#eceef2;white-space:nowrap}
+.agent img{width:16px;height:16px;vertical-align:-3px;margin-right:6px}
+
+/* Stats */
+.stats{display:-webkit-flex;display:flex;-webkit-flex-wrap:wrap;flex-wrap:wrap;margin:0 -6px 8px}
+.stat{width:50%;padding:0 6px 12px}
+@media (min-width:700px){.stat{width:25%}}
+.stat>div{background:#16171d;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:13px 14px;height:100%}
+.stat span{display:block;font-size:12.5px;color:#8a909c;font-weight:600}
+.stat strong{display:block;font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.3}
+.stat small{display:block;font-size:12px;color:#8a909c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Sessions */
+.session{background:#1d1f26;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 13px;margin-bottom:10px}
+.session.waiting{border-color:rgba(250,178,25,.45)}
+.s-top{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;-webkit-justify-content:space-between;justify-content:space-between;font-size:12.5px;font-weight:650;color:#b4b9c3}
+.s-name{font-weight:650;font-size:15px;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.s-sub{font-size:12.5px;color:#8a909c;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#8a909c;margin-right:7px;vertical-align:0}
+.dot.busy{background:#3fb950}.dot.waiting{background:#fab219}
+.seg{display:-webkit-flex;display:flex;background:#1d1f26;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:3px}
+.seg button{border:0;background:none;color:#8a909c;font-weight:650;font-size:13px;padding:6px 12px;border-radius:8px}
+.seg button.on{background:#16171d;color:#eceef2}
+.seg button span{color:#8a909c;font-weight:600;margin-left:4px}
+.more{display:block;width:100%;text-align:center;border:0;background:none;color:#8fa8ff;font-weight:650;padding:8px}
+
+/* Limits */
+.provider+.provider{border-top:1px solid rgba(255,255,255,.08);margin-top:14px;padding-top:14px}
+.limit{margin-top:10px}
+.limit-line{display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;font-size:13.5px}
+.meter{height:7px;border-radius:4px;background:#252830;margin:6px 0 5px;position:relative;overflow:hidden}
+.meter span{display:block;height:100%;border-radius:4px}
+.meter i{position:absolute;top:0;bottom:0;width:2px;background:#b4b9c3}
+.limit-foot{display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;font-size:12px;color:#8a909c}
+.ahead{color:#fab219}
+
+/* Activity */
+.day{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8a909c;padding:14px 2px 6px}
+.day:first-child{padding-top:0}
+.event{display:-webkit-flex;display:flex;-webkit-align-items:flex-start;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.event-time{width:50px;-webkit-flex:none;flex:none;color:#8a909c;font-size:12.5px;padding-top:1px}
+.event-main{-webkit-flex:1;flex:1;min-width:0}
+.event-main strong{display:block;font-weight:600}
+.event-main small{display:block;color:#8a909c;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.x{border:0;background:none;color:#8a909c;padding:2px 4px 2px 10px}
+
+/* Setup and toast */
+.hero{text-align:center;padding:22px 6px 6px}
+.hero svg.logo{width:68px;height:68px}
+.hero h1{font-size:24px;letter-spacing:-.02em;margin:14px 0 6px}
+.steps{padding-left:20px;color:#b4b9c3;margin:12px 0}.steps li{margin-bottom:6px}
+.callout{background:rgba(250,178,25,.12);color:#e9cf8a;border-radius:11px;padding:11px 13px;font-size:13.5px;margin:10px 0}
+.callout.info{background:rgba(143,168,255,.12);color:#c8d4ff}
+.toast{position:fixed;left:14px;right:14px;bottom:84px;z-index:30;background:#252830;border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:11px 14px;font-size:14px;text-align:center}
+.toast.error{border-color:rgba(240,96,93,.6)}
+.about{text-align:center;padding:6px 0}
+.about svg.logo{width:52px;height:52px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><svg viewBox="0 0 64 64"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f08a5d"/><stop offset="1" stop-color="#8b7cf0"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#g)"/><path d="M12 34h9l5-12 8 22 6-14 3 4h9" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Assistente <b>IA</b></span></div>
+  <span id="status" class="pill"><i></i>Connecting</span>
+</header>
+
+<main>
+  <section id="view-setup" class="hidden">
+    <div class="hero">
+      <svg class="logo" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="url(#g)"/><path d="M12 34h9l5-12 8 22 6-14 3 4h9" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h1>Connect to your portal</h1>
+      <p class="muted">Follow your coding agents and answer their requests from this device.</p>
+    </div>
+    <div class="card">
+      <ol class="steps">
+        <li>On your computer, open the Assistente IA portal.</li>
+        <li>Go to <strong>Devices</strong> and choose <strong>Show pairing code</strong>.</li>
+        <li>Tap <strong>Scan code</strong> below and point the camera at it.</li>
+      </ol>
+      <button class="btn primary block" id="scan">Scan code</button>
+      <div id="offer" class="callout info hidden"><p id="offerText"></p><button class="btn primary block" id="pair">Connect</button></div>
+      <p id="pairMessage" class="callout hidden"></p>
+      <button class="btn ghost block" id="manualToggle">Paste a pairing link instead</button>
+      <div id="manual" class="hidden"><textarea id="pairLink" rows="3" autocapitalize="off" spellcheck="false" placeholder="assistenteia://pair?…"></textarea>
+        <button class="btn block" id="pairManual">Connect with link</button></div>
+      <button class="btn ghost block" id="wifiSetup">Wi-Fi settings</button>
+    </div>
+  </section>
+
+  <section id="view-home" class="hidden">
+    <div id="approvals"></div>
+    <div id="offline" class="callout hidden"></div>
+    <div class="stats" id="stats"></div>
+    <div class="cols">
+      <div class="col main"><div class="card"><div class="card-head"><div><h2>Sessions</h2></div><div class="seg" id="sessionTabs"><button data-tab="active" class="on">Active</button><button data-tab="history">History</button></div></div><div id="sessions"></div></div></div>
+      <div class="col side"><div class="card"><div class="card-head"><div><h2>Usage limits</h2><p>Marker shows steady pace</p></div></div><div id="limits"></div></div></div>
+    </div>
+  </section>
+
+  <section id="view-activity" class="hidden">
+    <div class="card"><div class="card-head"><div><h2>Recent activity</h2><p>Sessions, approvals and alerts</p></div><button class="btn sm ghost" id="clearLogs">Clear all</button></div><div id="activity"></div></div>
+  </section>
+
+  <section id="view-settings" class="hidden">
+    <div class="card"><div class="card-head"><div><h2>Notifications</h2><p>Answer requests even when the app is closed</p></div></div>
+      <div class="row"><div class="t"><strong>Notify me in the background</strong><small>Requests arrive with Allow and Deny buttons.</small></div><label class="switch"><input type="checkbox" id="watch"><span></span></label></div>
+      <div id="notifyBlocked" class="callout hidden">Notifications are turned off for this app.<button class="btn sm block" id="notifySettings">Allow notifications</button></div>
+      <div class="row"><div class="t"><strong>Keep it running</strong><small>Stops the phone from pausing the app to save battery.</small></div><button class="btn sm" id="battery">Settings</button></div>
+      <div class="row"><div class="t"><strong>Vibrate in the app</strong><small>A short buzz for new requests while the app is open.</small></div><label class="switch"><input type="checkbox" id="vibrate"><span></span></label></div>
+    </div>
+    <div class="card"><div class="card-head"><div><h2>Connection</h2><p id="connection">Not connected</p></div></div>
+      <button class="btn block" id="rescan">Scan a new pairing code</button>
+      <button class="btn block" id="wifi">Wi-Fi settings</button>
+      <button class="btn bad block" id="forget">Disconnect this device</button>
+    </div>
+    <div class="card about">
+      <svg class="logo" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="url(#g)"/><path d="M12 34h9l5-12 8 22 6-14 3 4h9" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h2 style="margin-top:8px">Assistente IA</h2>
+      <p class="muted small" id="version">Version</p>
+      <p style="margin-top:8px">Created by <strong>Diogo Moreira</strong></p>
+      <p class="muted small">MIT License · github.com/diogosmoreira84</p>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" id="tabs">
+  <button data-view="home" class="on"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Overview<span class="badge hidden" id="badge"></span></button>
+  <button data-view="activity"><svg class="i" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Activity</button>
+  <button data-view="settings"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Settings</button>
+</nav>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+(function () {
+  'use strict';
+  var NAMES = {claude: 'Claude Code', codex: 'Codex'};
+  var COLORS = {claude: '#d95926', codex: '#9085e9'};
+  var STATUS = {busy: ['Working', 'busy'], waiting: ['Needs you', 'waiting'], idle: ['Idle', ''], unknown: ['Unknown', ''], shell: ['Terminal open', '']};
+  var view = 'home', paired = false, portal = false, pending = false, latest = null;
+  var armed = {}, queued = {}, seen = {}, showAll = false, timer = null, toastTimer = null, sessionTab = 'active', lastSessions = [];
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined && text !== null) node.textContent = text;
+    return node;
+  }
+  function add(parent, tag, cls, text) { var node = el(tag, cls, text); parent.appendChild(node); return node; }
+  function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); return node; }
+  function show(node, on) { node.className = node.className.replace(/\s*hidden/g, '') + (on ? '' : ' hidden'); }
+  function provider(value) {
+    var id = String(value || '').toLowerCase().replace(/[\s_-]/g, '');
+    return id === 'claude' || id === 'claudecode' ? 'claude' : id === 'codex' ? 'codex' : '';
+  }
+  function agentTag(parent, value) {
+    var id = provider(value), tag = add(parent, 'span', 'agent');
+    if (id) { var img = add(tag, 'img'); img.src = id + '.svg'; img.alt = ''; }
+    tag.appendChild(document.createTextNode(NAMES[id] || value || 'Agent'));
+    return tag;
+  }
+  function duration(seconds) {
+    seconds = Math.max(0, Math.round(seconds));
+    if (seconds < 60) return seconds + 's';
+    var m = Math.floor(seconds / 60), h = Math.floor(m / 60);
+    if (h >= 24) return Math.floor(h / 24) + 'd ' + (h % 24) + 'h';
+    return h ? h + 'h ' + (m % 60) + 'm' : m + 'm';
+  }
+  function ago(ms) { var s = (Date.now() - ms) / 1000; return s < 45 ? 'just now' : duration(s) + ' ago'; }
+  function toast(message, error) {
+    var node = $('toast');
+    node.textContent = message;
+    node.className = 'toast' + (error ? ' error' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { show(node, false); }, error ? 5000 : 2800);
+  }
+  function send(action) {
+    if (typeof AcerPanel === 'undefined') return;
+    pending = true;
+    try { action(); } catch (e) { pending = false; }
+  }
+  function refresh() { if (!pending) send(function () { AcerPanel.refresh(); }); }
+
+  /* Navigation */
+  function go(target) {
+    view = target;
+    show($('view-setup'), !paired);
+    show($('view-home'), paired && view === 'home');
+    show($('view-activity'), paired && view === 'activity');
+    show($('view-settings'), paired && view === 'settings');
+    show($('tabs'), paired);
+    var buttons = $('tabs').getElementsByTagName('button');
+    for (var i = 0; i < buttons.length; i++) buttons[i].className = buttons[i].getAttribute('data-view') === view ? 'on' : '';
+    if (view === 'settings') renderSettings();
+    window.scrollTo(0, 0);
+  }
+  $('tabs').onclick = function (event) {
+    var node = event.target;
+    while (node && node.tagName !== 'BUTTON') node = node.parentNode;
+    if (node) go(node.getAttribute('data-view'));
+  };
+
+  /* Approvals */
+  function remaining(item) {
+    var s = Math.max(0, Math.round((item.expiresAt - Date.now()) / 1000));
+    return s >= 60 ? Math.floor(s / 60) + 'm ' + (s % 60 < 10 ? '0' : '') + (s % 60) + 's left' : s + 's left';
+  }
+  function renderApprovals(items) {
+    var box = clear($('approvals')), open = 0;
+    var listed = {};
+    (items || []).forEach(function (a) { listed[a.id] = true; });
+    Object.keys(queued).forEach(function (id) { if (!listed[id]) delete queued[id]; });
+    // Answered requests (here, in the portal, by a rule or in the terminal) disappear at once.
+    items = (items || []).filter(function (a) {
+      return (!a.kind || a.kind === 'permission') && a.expiresAt > Date.now() && !a.decision && !queued[a.id];
+    });
+    items.forEach(function (item) {
+      open++;
+      if (!seen[item.id]) { seen[item.id] = true; if ($('vibrate').checked) AcerPanel.alert(); }
+      var card = add(box, 'div', 'approval');
+      var meta = add(card, 'div', 'approval-meta');
+      agentTag(meta, item.source);
+      if (item.project) add(meta, 'strong', '', item.project);
+      if (item.tool) add(meta, 'span', 'pill', item.tool);
+      var countdown = add(meta, 'span', 'muted small', remaining(item));
+      countdown.setAttribute('data-expires', item.expiresAt);
+      add(card, 'div', 'code mono', item.detail || item.description || 'Review the request on your computer.');
+      var actions = add(card, 'div', 'actions');
+      var allow = add(actions, 'button', 'btn good', armed[item.id] && Date.now() - armed[item.id] < 4000 ? 'Tap to confirm' : 'Allow once');
+      var deny = add(actions, 'button', 'btn bad', 'Deny');
+      allow.onclick = function () {
+        if (armed[item.id] && Date.now() - armed[item.id] < 4000) { decide(item, 'allow'); return; }
+        armed[item.id] = Date.now();
+        allow.textContent = 'Tap to confirm';
+        setTimeout(function () { if (allow.parentNode && armed[item.id]) { allow.textContent = 'Allow once'; delete armed[item.id]; } }, 4000);
+      };
+      deny.onclick = function () { decide(item, 'deny'); };
+    });
+    $('badge').textContent = open;
+    show($('badge'), open > 0);
+  }
+  function decide(item, choice) {
+    queued[item.id] = choice;
+    delete armed[item.id];
+    renderApprovals(latest && latest.approvals ? latest.approvals.items : []);
+    toast(choice === 'allow' ? 'Allowed. The agent continues.' : 'Denied. The agent was told no.');
+    send(function () { AcerPanel.decide(item.id, choice); });
+  }
+  setInterval(function () {
+    var nodes = $('approvals').querySelectorAll('[data-expires]');
+    for (var i = 0; i < nodes.length; i++) nodes[i].textContent = remaining({expiresAt: Number(nodes[i].getAttribute('data-expires'))});
+  }, 1000);
+
+  /* Overview */
+  function stat(parent, label, value, sub) {
+    var box = add(add(parent, 'div', 'stat'), 'div');
+    add(box, 'span', '', label); add(box, 'strong', '', value); add(box, 'small', '', sub || '');
+  }
+  function renderStats(data) {
+    var box = clear($('stats')), online = !data.offline;
+    var sessions = (data.work && data.work.sessions) || [];
+    var busy = sessions.filter(function (s) { return s.status === 'busy'; }).length;
+    var waiting = (data.approvals && data.approvals.items || []).filter(function (a) { return !a.decision && a.expiresAt > Date.now(); }).length;
+    var pc = data.state && data.state.pc || {};
+    stat(box, 'Working now', online ? String(busy) : '—', sessions.length + ' sessions tracked');
+    stat(box, 'Needs you', online ? String(waiting) : '—', waiting ? 'Approval waiting above' : 'Nothing pending');
+    stat(box, 'CPU', typeof pc.cpu === 'number' ? Math.round(pc.cpu) + '%' : '—', data.state && data.state.host || 'Computer');
+    stat(box, 'Memory', pc.ramTotalGb ? Math.round(pc.ramUsedGb / pc.ramTotalGb * 100) + '%' : '—',
+      pc.ramTotalGb ? pc.ramUsedGb.toFixed(1) + ' / ' + pc.ramTotalGb.toFixed(1) + ' GB' : '');
+  }
+  function isActive(s) { return s.status === 'busy' || s.status === 'waiting'; }
+  function renderSessions(items) {
+    var box = clear($('sessions'));
+    var rank = {waiting: 0, busy: 1, shell: 2, idle: 3, unknown: 4};
+    items = (items || []).filter(function (s) { return provider(s.tool); });
+    lastSessions = items;
+    var active = items.filter(isActive), history = items.filter(function (s) { return !isActive(s); });
+    var tabs = $('sessionTabs').getElementsByTagName('button');
+    for (var t = 0; t < tabs.length; t++) {
+      var name = tabs[t].getAttribute('data-tab'), count = name === 'active' ? active.length : history.length;
+      clear(tabs[t]).appendChild(document.createTextNode(name === 'active' ? 'Active' : 'History'));
+      add(tabs[t], 'span', '', String(count));
+      tabs[t].className = name === sessionTab ? 'on' : '';
+    }
+    var list = (sessionTab === 'active' ? active : history).sort(function (a, b) {
+      return (rank[a.status] === undefined ? 5 : rank[a.status]) - (rank[b.status] === undefined ? 5 : rank[b.status]) || (b.lastActive || 0) - (a.lastActive || 0);
+    });
+    if (!list.length) {
+      var e = add(box, 'div', 'empty');
+      add(e, 'strong', '', sessionTab === 'active' ? 'No agent is working right now' : 'No past sessions');
+      add(e, 'span', '', sessionTab === 'active' ? (history.length ? 'Recent sessions are under History.' : 'Start Claude Code or Codex on your computer.') : 'Sessions from the last week appear here.');
+      return;
+    }
+    list.slice(0, showAll ? list.length : 8).forEach(function (s) {
+      var st = STATUS[s.status] || STATUS.unknown;
+      var card = add(box, 'div', 'session' + (s.status === 'waiting' ? ' waiting' : ''));
+      var top = add(card, 'div', 's-top');
+      var state = add(top, 'span'); add(state, 'span', 'dot ' + st[1]); state.appendChild(document.createTextNode(st[0]));
+      agentTag(top, s.tool);
+      add(card, 'div', 's-name', s.project || s.name || 'Session');
+      var bits = [];
+      if (s.status === 'waiting' && s.waitingFor) bits.push('Waiting for ' + s.waitingFor);
+      if (s.model) bits.push(s.model + (s.effort ? ' · ' + s.effort : ''));
+      if (s.status === 'busy' && s.startedAt) bits.push('running ' + duration((Date.now() - s.startedAt) / 1000));
+      else if (s.lastActive) bits.push(ago(s.lastActive));
+      if (bits.length) add(card, 'div', 's-sub', bits.join(' · '));
+    });
+    if (list.length > 8) {
+      var more = add(box, 'button', 'more', showAll ? 'Show fewer' : 'Show all ' + list.length + ' sessions');
+      more.onclick = function () { showAll = !showAll; renderSessions(lastSessions); };
+    }
+  }
+  $('sessionTabs').onclick = function (event) {
+    var node = event.target;
+    while (node && node.tagName !== 'BUTTON') node = node.parentNode;
+    if (!node) return;
+    sessionTab = node.getAttribute('data-tab');
+    showAll = false;
+    renderSessions(lastSessions);
+  };
+  function renderLimits(providers) {
+    var box = clear($('limits'));
+    ['claude', 'codex'].forEach(function (id) {
+      var p = (providers || []).filter(function (x) { return provider(x.id) === id; })[0];
+      var block = add(box, 'div', 'provider');
+      var head = add(block, 'div', 'limit-line'); agentTag(head, id); if (p && p.plan) add(head, 'span', 'pill', p.plan);
+      if (!p || !p.limits || !p.limits.length) { add(block, 'p', 'muted small', p && p.error || 'No usage reading yet.'); return; }
+      p.limits.forEach(function (limit) {
+        var pct = Math.max(0, Math.min(100, Number(limit.percent) || 0));
+        var expected = typeof limit.expectedPercent === 'number' ? limit.expectedPercent :
+          limit.resetsAt && limit.windowSec ? Math.max(0, Math.min(100, 100 - (limit.resetsAt - Date.now()) / 1000 / limit.windowSec * 100)) : null;
+        var row = add(block, 'div', 'limit');
+        var line = add(row, 'div', 'limit-line');
+        add(line, 'span', '', String(limit.label || 'Limit').replace(/5-hour( session)?/i, '5-hour window'));
+        add(line, 'strong', '', Math.round(pct) + '%');
+        var meter = add(row, 'div', 'meter'), fill = add(meter, 'span');
+        fill.style.width = pct + '%'; fill.style.background = COLORS[id];
+        if (expected !== null) add(meter, 'i').style.left = expected + '%';
+        var foot = add(row, 'div', 'limit-foot');
+        add(foot, 'span', '', limit.resetsAt ? 'Resets in ' + duration((limit.resetsAt - Date.now()) / 1000) : '');
+        if (expected !== null) add(foot, 'span', pct > expected + 10 && pct >= 25 ? 'ahead' : '', pct > expected + 10 && pct >= 25 ? 'Ahead of pace' : 'On track');
+      });
+    });
+  }
+
+  /* Activity */
+  function dayLabel(ms) {
+    var d = new Date(ms), t = new Date();
+    d.setHours(0, 0, 0, 0); t.setHours(0, 0, 0, 0);
+    var diff = Math.round((t - d) / 86400000);
+    return diff === 0 ? 'Today' : diff === 1 ? 'Yesterday' : d.toDateString();
+  }
+  function renderActivity(logs) {
+    var box = clear($('activity')), current = '';
+    if (!logs || !logs.length) { var e = add(box, 'div', 'empty'); add(e, 'strong', '', 'No activity yet'); add(e, 'span', '', 'Events from your agents appear here.'); return; }
+    logs.forEach(function (item) {
+      var label = dayLabel(item.time * 1000);
+      if (label !== current) { add(box, 'div', 'day', label); current = label; }
+      var row = add(box, 'div', 'event');
+      var time = new Date(item.time * 1000);
+      add(row, 'span', 'event-time', (time.getHours() < 10 ? '0' : '') + time.getHours() + ':' + (time.getMinutes() < 10 ? '0' : '') + time.getMinutes());
+      var main = add(row, 'div', 'event-main');
+      add(main, 'strong', '', item.event);
+      add(main, 'small', '', [NAMES[provider(item.agent)] || item.agent, item.project, item.result].filter(function (x) { return x; }).join(' · '));
+      var x = add(row, 'button', 'x', '✕');
+      x.setAttribute('aria-label', 'Delete');
+      x.onclick = function () { send(function () { AcerPanel.deleteLogs(String(item.id)); }); };
+    });
+  }
+  $('clearLogs').onclick = function () {
+    if (window.confirm('Clear all activity for this account?')) send(function () { AcerPanel.deleteLogs('all'); });
+  };
+
+  /* Settings */
+  function renderSettings() {
+    var state = {};
+    try { state = JSON.parse(AcerPanel.watchState()); } catch (e) {}
+    $('watch').checked = !!state.enabled;
+    $('watch').disabled = !state.portal;
+    show($('notifyBlocked'), state.enabled && state.allowed === false);
+    $('version').textContent = 'Version ' + (state.version || '');
+  }
+  $('watch').onchange = function () {
+    AcerPanel.setWatch(this.checked);
+    toast(this.checked ? 'Background notifications are on.' : 'Background notifications are off.');
+    setTimeout(renderSettings, 800);
+  };
+  $('notifySettings').onclick = function () { AcerPanel.notificationSettings(); };
+  $('battery').onclick = function () { AcerPanel.batterySettings(); };
+  $('vibrate').checked = (localStorage.getItem('vibrate') || '1') === '1';
+  $('vibrate').onchange = function () { localStorage.setItem('vibrate', this.checked ? '1' : '0'); };
+  $('wifi').onclick = $('wifiSetup').onclick = function () { AcerPanel.wifi(); };
+  $('scan').onclick = $('rescan').onclick = function () { AcerPanel.scan(); };
+  $('forget').onclick = function () {
+    if (window.confirm('Disconnect this device? You will need a new pairing code to connect again.')) send(function () { AcerPanel.forget(); });
+  };
+
+  /* Pairing */
+  var offered = null;
+  window.offerPairing = function (link, hint) {
+    offered = link;
+    $('offerText').textContent = hint || 'Connect to this portal?';
+    show($('offer'), true);
+    show($('pairMessage'), false);
+    if (paired) { paired = false; go('home'); }
+  };
+  window.pairingMessage = function (message) {
+    $('pairMessage').textContent = message;
+    show($('pairMessage'), true);
+  };
+  $('pair').onclick = function () { if (offered) { var link = offered; offered = null; show($('offer'), false); send(function () { AcerPanel.pair(link); }); } };
+  $('manualToggle').onclick = function () { show($('manual'), $('manual').className.indexOf('hidden') >= 0); };
+  $('pairManual').onclick = function () {
+    var link = $('pairLink').value.trim();
+    if (link) send(function () { AcerPanel.pair(link); });
+  };
+
+  /* Data from the app */
+  window.receivePanel = function (data) {
+    pending = false;
+    var wasPaired = paired;
+    paired = !!data.paired;
+    portal = !!data.portal;
+    if (data.error) {
+      if (data.action === 'pair') window.pairingMessage(data.error); else toast(data.error, true);
+      if (data.action === 'decision') queued = {};
+    }
+    if (data.notice && data.action !== 'decision') toast(data.notice);
+    if (data.action === 'pair' && paired && !data.error) toast('Connected. You will get requests here.');
+    if (paired !== wasPaired || !document.querySelector('main section:not(.hidden)')) go(paired ? view : 'home');
+    if (!paired) { clearInterval(timer); timer = null; setStatus(false, 'Not connected'); return; }
+    if (!timer) timer = setInterval(refresh, 3000);
+    latest = data;
+    $('connection').textContent = 'Connected to ' + (data.profile || 'your portal');
+    setStatus(!data.offline, data.offline ? (data.connectionError || 'Offline') : (data.state && data.state.host || 'Online'));
+    show($('offline'), !!data.offline);
+    $('offline').textContent = data.connectionError || 'The desktop agent is offline.';
+    renderApprovals(data.approvals && data.approvals.items);
+    renderStats(data);
+    renderSessions(data.work && data.work.sessions);
+    renderLimits(data.quotas && data.quotas.providers);
+    renderActivity(data.portalLogs);
+  };
+  function setStatus(on, text) {
+    var node = clear($('status'));
+    node.className = 'pill' + (on ? ' on' : '');
+    add(node, 'i');
+    node.appendChild(document.createTextNode(text.length > 26 ? text.slice(0, 25) + '…' : text));
+  }
+
+  go('home');
+  refresh();
+})();
+</script>
+</body>
+</html>
